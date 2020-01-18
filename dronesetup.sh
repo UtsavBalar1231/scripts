@@ -6,7 +6,7 @@ git clone https://github.com/UtsavisGreat/AnyKernel3 -b master anykernel
 if [[ "$@" =~ "clang"* ]]; then
 	git clone https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9 --depth=1 gcc
 	git clone https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9 --depth=1 gcc32
-	git clone https://github.com/crdroidandroid/android_prebuilts_clang_host_linux-x86_clang-5799447  --depth=1 clang
+	git clone https://github.com/BenzoRom/benzoClang-10.0  --depth=1 clang
 elif [[ "$@" =~ "dragon"* ]]; then
 	wget https://github.com/kdrag0n/proton-clang-build/releases/download/20190803/proton_clang-20190803-c835164a.tar.zst && tar -I zstd -xvf proton_clang-20190803-c835164a.tar.zst && mv proton_clang-20190803-c835164a dragontc
 elif [[ "$@" =~ "gcc9"* ]]; then
