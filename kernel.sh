@@ -22,7 +22,7 @@ if [[ "$@" =~ "beta"* ]]; then
 	INC="$((INC + 1))"
 else
 	export TYPE=stable
-	export VERSION="IMMENSITY-KERNEL-STABLE-${RELEASE_CODENAME}"
+	export VERSION="IMMENSITY-KERNEL-${RELEASE_CODENAME}"
 fi
 
 export ZIPNAME="${VERSION}.zip"
@@ -35,13 +35,13 @@ fi
 
 # Post to CI channel
 curl -s -X POST https://api.telegram.org/bot${BOT_API_KEY}/SendAnimation -d animation=https://thumbs.gfycat.com/TidyOccasionalIncatern-size_restricted.gif -d chat_id=${CI_CHANNEL_ID}
-curl -s -X POST https://api.telegram.org/bot${BOT_API_KEY}/sendMessage -d text="Kernel: <code>IMMENSITY Kernel</code>
+curl -s -X POST https://api.telegram.org/bot${BOT_API_KEY}/sendMessage -d text="Kernel: <code>iMMENSITY Kernel</code>
 Type: <code>${TYPE}</code>
 Device: <code>XiaoMi Redmi K20 Pro (raphael)</code>
 Compiler: <code>${COMPILER}</code>
 Branch: <code>$(git rev-parse --abbrev-ref HEAD)</code>
 <i>Build started on Drone Cloud...</i>
-Check the build status here: https://cloud.drone.io/UtsavisGreat/android_kernel_xiaomi_sm8150/${DRONE_BUILD_NUMBER}" -d chat_id=${CI_CHANNEL_ID} -d parse_mode=HTML
+Check the build status here: https://cloud.drone.io/UtsavisGreat/kernel_xiaomi_raphael/${DRONE_BUILD_NUMBER}" -d chat_id=${CI_CHANNEL_ID} -d parse_mode=HTML
 curl -s -X POST https://api.telegram.org/bot${BOT_API_KEY}/sendMessage -d text="Build started for revision ${DRONE_BUILD_NUMBER}" -d chat_id=${CI_CHANNEL_ID} -d parse_mode=HTML
 
 # Make is shit so I have to pass thru some toolchains
