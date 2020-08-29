@@ -1,7 +1,7 @@
 #!/bin/bash
 cd ..
 
-git clone https://github.com/UtsavisGreat/AnyKernel3 -b master anykernel
+git clone https://github.com/UtsavBalar/AnyKernel3 -b master anykernel
 
 if [[ "$@" =~ "clang"* ]]; then
 	git clone https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9 --depth=1 gcc
