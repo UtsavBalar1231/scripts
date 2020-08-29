@@ -5,13 +5,13 @@ cd ..
 
 # Export compiler type
 if [[ "$@" =~ "clang"* ]]; then
-	export COMPILER="Clang 9.0.6"
-elif [[ "$@" =~ "dragon"* ]]; then
-        export COMPILER="ProtonClang-12.0"
-elif [[ "$@" =~ "gcc9"* ]]; then
-        export COMPILER="Bare Metal GCC-9.2.0"
+	export COMPILER="BenzoClang-12.0"
+elif [[ "$@" =~ "proton"* ]]; then
+	export COMPILER="ProtonClang-12.0"
+elif [[ "$@" =~ "gcc"* ]]; then
+	export COMPILER="Bare Metal GCC-10.2.0"
 else
-	export COMPILER="Bare Metal GCC 10.0"
+	export COMPILER="ProtonClang-12.0"
 fi
 
 # Export correct version
@@ -21,7 +21,7 @@ if [[ "$@" =~ "beta"* ]]; then
 	export INC="$(echo ${RC} | grep -o -E '[0-9]+')"
 	INC="$((INC + 1))"
 else
-	export TYPE=stable
+	export TYPE=C.I
 	export VERSION="IMMENSiTY-AUTO"
 fi
 
@@ -46,39 +46,72 @@ curl -s -X POST https://api.telegram.org/bot${BOT_API_KEY}/sendMessage -d text="
 
 # Make is shit so I have to pass thru some toolchains
 # Let's build, anyway
-PATH=/drone/src/clang/bin:/drone/src/gcc/bin:/drone/src/gcc32/bin:${PATH}
 START=$(date +"%s")
 make O=out ARCH=arm64 raphael_defconfig
 if [[ "$@" =~ "clang"* ]]; then
+	PATH=/drone/src/clang/bin:/drone/src/gcc/bin:/drone/src/gcc32/bin:${PATH}
 	make ARCH=arm64 \
 		O=out \
-		CC="ccache clang" \
+		CC="clang" \
 		CLANG_TRIPLE="aarch64-linux-gnu-" \
 		CROSS_COMPILE="aarch64-linux-android-" \
-		CROSS_COMPILE_ARM32="arm-linux-androidabi-" \
+		CROSS_COMPILE_ARM32="arm-linux-androideabi-" \
 		-j${KEBABS}
-elif [[ "$@" =~ "dragon"* ]]; then
-	PATH=/home/utsavthecunt/proton-clang/bin/:$PATH
+elif [[ "$@" =~ "proton"* ]]; then
+scripts/config --file out/.config \
+	        -e LTO \
+	        -e LTO_CLANG \
+		-d THINLTO \
+	        -e SHADOW_CALL_STACK \
+	        -e TOOLS_SUPPORT_RELR \
+	        -e LD_LLD
+cd out
+
+make O=out \
+        ARCH=arm64 \
+        olddefconfig
+cd ../
+
+PATH=/drone/src/clang/bin/:$PATH
 	make ARCH=arm64 \
-	        O=out \
-	        CC="ccache clang" \
-	        LLVM_IAS=1 \
-	        LD="ld.lld" \
-	        AR="llvm-ar" \
-	        NM="llvm-nm" \
-	        OBJCOPY="llvm-objcopy" \
-	        OBJDUMP="llvm-objdump" \
+		O=out \
+		CC="clang" \
+		LD="ld.lld" \
+		AR="llvm-ar" \
+		NM="llvm-nm" \
+		OBJCOPY="llvm-objcopy" \
+		OBJDUMP="llvm-objdump" \
 	        OBJSIZE="llvm-size" \
-	        READELF="llvm-readelf" \
-	        STRIP="llvm-strip" \
-	        CLANG_TRIPLE="aarch64-linux-gnu-" \
-	        CROSS_COMPILE="aarch64-linux-gnu-" \
-	        CROSS_COMPILE_ARM32="arm-linux-gnueabi-" \
-                -j${KEBABS}
-elif [[ "$@" =~ "gcc9"* ]]; then
-        make -j${KEBABS} O=out ARCH=arm64 CROSS_COMPILE="/drone/src/gcc/bin/aarch64-elf-" CROSS_COMPILE_ARM32="/drone/src/gcc32/bin/arm-eabi-"
+		READELF="llvm-readelf" \
+		STRIP="llvm-strip" \
+		CLANG_TRIPLE="aarch64-linux-gnu-" \
+		CROSS_COMPILE="aarch64-linux-gnu-" \
+		CROSS_COMPILE_ARM32="arm-linux-gnueabi-" \
+		-j${KEBABS}
+elif [[ "$@" =~ "gcc"* ]]; then
+	PATH=/drone/src/gcc/bin:/drone/src/gcc32/bin:${PATH}
+	make ARCH=arm64 \
+		O=out \
+		CROSS_COMPILE="aarch64-elf-" \
+		CROSS_COMPILE_ARM32="arm-eabi-" \
+		-j${KEBABS}
 else
-	make -j${KEBABS} O=out ARCH=arm64 CROSS_COMPILE="/drone/src/gcc/bin/aarch64-raphiel-elf-" CROSS_COMPILE_ARM32="/drone/src/gcc32/bin/arm-eabi-"
+	PATH=/drone/src/clang/bin/:$PATH
+	make ARCH=arm64 \
+		O=out \
+		CC="clang" \
+		LD="ld.lld" \
+		AR="llvm-ar" \
+		NM="llvm-nm" \
+		OBJCOPY="llvm-objcopy" \
+		OBJDUMP="llvm-objdump" \
+		OBJSIZE="llvm-size" \
+		READELF="llvm-readelf" \
+		STRIP="llvm-strip" \
+		CLANG_TRIPLE="aarch64-linux-gnu-" \
+		CROSS_COMPILE="aarch64-linux-gnu-" \
+		CROSS_COMPILE_ARM32="arm-linux-gnueabi-" \
+                -j${KEBABS}
 fi
 END=$(date +"%s")
 DIFF=$(( END - START))
@@ -100,4 +133,3 @@ else
 fi
 
 rm -rf ${ZIPNAME} && rm -rf Image.gz-dtb
-
